@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRAKIDS RENTAL INCOME</title>
+  <meta name="description" content="Modern rental income tracker for managing rental income, expenses, and tenant payments across shops and residential units." />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#6366f1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🏢</div>
+    <div class="brand-text">
+      <span class="brand-name">FRAKIDS RENTAL</span>
+      <span class="brand-sub">Income Manager</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="#" class="nav-item active" data-page="dashboard" id="nav-dashboard">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Dashboard</span>
+    </a>
+    <a href="#" class="nav-item" data-page="monthly" id="nav-monthly">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">Monthly Tracking</span>
+    </a>
+    <a href="#" class="nav-item" data-page="units" id="nav-units">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Units Table</span>
+    </a>
+    <a href="#" class="nav-item" data-page="expenses" id="nav-expenses">
+      <span class="nav-icon">💸</span>
+      <span class="nav-label">Expenses</span>
+    </a>
+    <div class="nav-section-label">Analytics</div>
+    <a href="#" class="nav-item" data-page="reports" id="nav-reports">
+      <span class="nav-icon">📈</span>
+      <span class="nav-label">Reports</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="year-selector">
+      <label>Year</label>
+      <select id="globalYear"></select>
+    </div>
+    <button class="theme-toggle" id="themeToggle">
+      <span id="themeIcon">☀️</span> Light Mode
+    </button>
+  </div>
+</aside>
+
+<!-- ===== TOP BAR ===== -->
+<div class="topbar" id="topbar">
+  <button class="menu-btn" id="menuBtn">☰</button>
+  <div class="topbar-title" id="pageTitle">Dashboard</div>
+  <div class="topbar-right">
+    <input type="text" class="search-input" id="globalSearch" placeholder="Search tenant / unit..." />
+    <button class="btn btn-primary" id="topActionBtn">+ Add Payment</button>
+  </div>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="main-content" id="mainContent">
+
+  <!-- ========== DASHBOARD PAGE ========== -->
+  <section class="page active" id="page-dashboard">
+    <div class="page-header">
+      <h1>Dashboard Overview</h1>
+      <p class="page-sub">Real-time snapshot of your property finances</p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="stats-grid" id="summaryCards"></div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+      <div class="card chart-card">
+        <div class="card-header">
+          <h3>Monthly Income vs Expenses</h3>
+          <select id="chartYear" class="select-sm"></select>
+        </div>
+        <div class="chart-wrap"><canvas id="incomeChart"></canvas></div>
+      </div>
+      <div class="card chart-card small-chart">
+        <div class="card-header"><h3>Payment Status</h3></div>
+        <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Unit Status Cards -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Unit Payment Status — <span id="dashMonthLabel"></span></h3>
+        <select id="dashMonth" class="select-sm"></select>
+      </div>
+      <div class="unit-status-grid" id="unitStatusGrid"></div>
+    </div>
+  </section>
+
+  <!-- ========== MONTHLY TRACKING PAGE ========== -->
+  <section class="page" id="page-monthly">
+    <div class="page-header">
+      <h1>Monthly Tracking</h1>
+      <p class="page-sub">Manage payments month by month</p>
+    </div>
+
+    <div class="month-tabs-wrap">
+      <div class="month-tabs" id="monthTabs"></div>
+    </div>
+
+    <div class="card" id="monthlyContent">
+      <div class="card-header">
+        <h3 id="monthlyTableTitle">January</h3>
+        <div class="card-actions">
+          <button class="btn btn-sm btn-outline" id="exportMonthCSV">⬇ CSV</button>
+          <button class="btn btn-sm btn-outline" id="exportMonthPDF">⬇ PDF</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="monthlyTable">
+          <thead>
+            <tr>
+              <th>Unit</th>
+              <th>Tenant</th>
+              <th>Expected (KES)</th>
+              <th>Paid (KES)</th>
+              <th>Balance (KES)</th>
+              <th>Status</th>
+              <th>Date Paid</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="monthlyTableBody"></tbody>
+          <tfoot id="monthlyTableFoot"></tfoot>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== UNITS TABLE PAGE ========== -->
+  <section class="page" id="page-units">
+    <div class="page-header">
+      <h1>Units Directory</h1>
+      <p class="page-sub">All units with current payment status</p>
+    </div>
+
+    <div class="filter-bar">
+      <input type="text" class="search-input" id="unitSearch" placeholder="Search unit or tenant..." />
+      <select id="unitFilter" class="select-sm">
+        <option value="all">All Statuses</option>
+        <option value="paid">Paid</option>
+        <option value="partial">Partial</option>
+        <option value="unpaid">Unpaid</option>
+      </select>
+      <select id="unitMonthFilter" class="select-sm"></select>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table class="data-table" id="unitsTable">
+          <thead>
+            <tr>
+              <th>Unit</th>
+              <th>Type</th>
+              <th>Tenant</th>
+              <th>Expected (KES)</th>
+              <th>Paid (KES)</th>
+              <th>Balance (KES)</th>
+              <th>Status</th>
+              <th>Date Paid</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="unitsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== EXPENSES PAGE ========== -->
+  <section class="page" id="page-expenses">
+    <div class="page-header">
+      <h1>Expenses Tracker</h1>
+      <p class="page-sub">Track all property-related costs</p>
+    </div>
+
+    <div class="expense-controls">
+      <select id="expenseMonth" class="select-sm"></select>
+      <button class="btn btn-primary" id="addExpenseBtn">+ Add Expense</button>
+    </div>
+
+    <div class="stats-grid" id="expenseStats"></div>
+
+    <div class="card">
+      <div class="card-header"><h3>Expense Records — <span id="expMonthLabel"></span></h3></div>
+      <div class="table-wrap">
+        <table class="data-table" id="expensesTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Amount (KES)</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="expensesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== REPORTS PAGE ========== -->
+  <section class="page" id="page-reports">
+    <div class="page-header">
+      <h1>Financial Reports</h1>
+      <p class="page-sub">Monthly and yearly summaries with export options</p>
+    </div>
+
+    <div class="report-tabs">
+      <button class="tab-btn active" data-report="monthly">Monthly Report</button>
+      <button class="tab-btn" data-report="yearly">Yearly Report</button>
+    </div>
+
+    <!-- Monthly Report -->
+    <div class="report-section active" id="report-monthly">
+      <div class="filter-bar">
+        <select id="reportMonth" class="select-sm"></select>
+        <button class="btn btn-outline" id="exportReportCSV">⬇ Export CSV</button>
+        <button class="btn btn-outline" id="exportReportPDF">⬇ Export PDF</button>
+      </div>
+      <div class="stats-grid" id="reportStats"></div>
+      <div class="card">
+        <div class="card-header"><h3>Detailed Monthly Report — <span id="reportMonthLabel"></span></h3></div>
+        <div class="table-wrap">
+          <table class="data-table" id="reportTable">
+            <thead>
+              <tr><th>Unit</th><th>Tenant</th><th>Expected</th><th>Paid</th><th>Balance</th><th>Status</th></tr>
+            </thead>
+            <tbody id="reportTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Yearly Report -->
+    <div class="report-section" id="report-yearly">
+      <div class="filter-bar">
+        <button class="btn btn-outline" id="exportYearlyCSV">⬇ Export CSV</button>
+        <button class="btn btn-outline" id="exportYearlyPDF">⬇ Export PDF</button>
+      </div>
+      <div class="stats-grid" id="yearlyStats"></div>
+      <div class="card">
+        <div class="card-header"><h3>Yearly Summary</h3></div>
+        <div class="table-wrap">
+          <table class="data-table" id="yearlyTable">
+            <thead>
+              <tr><th>Month</th><th>Income</th><th>Expenses</th><th>Net Profit</th><th>Collected</th><th>Unpaid</th></tr>
+            </thead>
+            <tbody id="yearlyTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== PAYMENT MODAL ===== -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Edit Payment</h2>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="paymentForm">
+        <input type="hidden" id="payUnit" />
+        <input type="hidden" id="payMonth" />
+        <input type="hidden" id="payYear" />
+
+        <div class="form-group">
+          <label>Unit</label>
+          <input type="text" id="payUnitDisplay" readonly class="readonly-input"/>
+        </div>
+        <div class="form-group">
+          <label>Tenant Name</label>
+          <input type="text" id="payTenant" placeholder="Enter tenant name" required/>
+        </div>
+        <div class="form-group">
+          <label>Expected Rent (KES)</label>
+          <input type="number" id="payExpected" placeholder="0" required min="0"/>
+        </div>
+        <div class="form-group">
+          <label>Amount Paid (KES)</label>
+          <input type="number" id="payAmount" placeholder="0" min="0"/>
+        </div>
+        <div class="form-group">
+          <label>Date of Payment</label>
+          <input type="date" id="payDate"/>
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="payNotes" rows="2" placeholder="Optional notes..."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="modalCancel">Cancel</button>
+      <button class="btn btn-primary" id="modalSave">Save Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EXPENSE MODAL ===== -->
+<div class="modal-overlay" id="expenseModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="expModalTitle">Add Expense</h2>
+      <button class="modal-close" id="expModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="expenseForm">
+        <input type="hidden" id="expId"/>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="expDate" required/>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="expCategory">
+            <option>Maintenance</option>
+            <option>Water</option>
+            <option>Electricity</option>
+            <option>Security</option>
+            <option>Cleaning</option>
+            <option>Repairs</option>
+            <option>Insurance</option>
+            <option>Taxes</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" id="expDesc" placeholder="Description" required/>
+        </div>
+        <div class="form-group">
+          <label>Amount (KES)</label>
+          <input type="number" id="expAmount" placeholder="0" required min="0"/>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="expModalCancel">Cancel</button>
+      <button class="btn btn-primary" id="expModalSave">Save Expense</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
