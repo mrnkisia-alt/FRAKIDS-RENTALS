@@ -714,8 +714,11 @@ input, select, textarea { font-family: inherit; outline: none; }
   .stats-grid { grid-template-columns: 1fr; }
   .topbar-right .btn-primary { display: none; }
   .modal-overlay { padding: 8px; align-items: flex-end; }
-  .modal { border-radius: 16px 16px 0 0; max-width: 100%; margin: 0; animation: modalUp 0.3s ease-out; max-height: 90vh; display: flex; flex-direction: column; }
-  .modal-body { padding: 16px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .modal { border-radius: 16px 16px 0 0; max-width: 100%; margin: 0; animation: modalUp 0.3s ease-out; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
+  .modal-header { flex-shrink: 0; }
+  .modal-body { padding: 16px; overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1 1 auto; min-height: 0; }
+  .modal-footer { flex-shrink: 0; flex-direction: column; gap: 12px; }
+  .modal-footer .btn { width: 100%; margin: 0; }
   .chart-wrap { padding: 10px; }
   .topbar { padding: 0 12px; }
   
