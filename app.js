@@ -34,11 +34,56 @@ let statusChartInstance = null;
 
 // ----- INITIALIZATION ----- //
 document.addEventListener('DOMContentLoaded', () => {
+  ensureMobileResponsiveDOM();
   loadData();
   setupUI();
   setupEventListeners();
   renderPage(currentPage);
 });
+
+function ensureMobileResponsiveDOM() {
+  // Polyfill to ensure desktop-only and mobile-only classes are present (fixes aggressive local caching)
+  const topbarRight = document.querySelector('.topbar-right');
+  if (topbarRight && !topbarRight.classList.contains('desktop-only')) {
+    topbarRight.classList.add('desktop-only');
+  }
+
+  // Monthly Page
+  const monthlyWrap = document.querySelector('#monthlyContent .table-wrap');
+  if (monthlyWrap && !monthlyWrap.classList.contains('desktop-only')) {
+    monthlyWrap.classList.add('desktop-only');
+  }
+  if (!document.getElementById('monthlyCards')) {
+    const cardsDiv = document.createElement('div');
+    cardsDiv.className = 'mobile-cards mobile-only';
+    cardsDiv.id = 'monthlyCards';
+    if (monthlyWrap) monthlyWrap.parentNode.insertBefore(cardsDiv, monthlyWrap.nextSibling);
+  }
+
+  // Units Page
+  const unitsWrap = document.querySelector('#page-units .table-wrap');
+  if (unitsWrap && !unitsWrap.classList.contains('desktop-only')) {
+    unitsWrap.classList.add('desktop-only');
+  }
+  if (!document.getElementById('unitsCards')) {
+    const cardsDiv = document.createElement('div');
+    cardsDiv.className = 'mobile-cards mobile-only';
+    cardsDiv.id = 'unitsCards';
+    if (unitsWrap) unitsWrap.parentNode.insertBefore(cardsDiv, unitsWrap.nextSibling);
+  }
+
+  // Expenses Page
+  const expensesWrap = document.querySelector('#page-expenses .table-wrap');
+  if (expensesWrap && !expensesWrap.classList.contains('desktop-only')) {
+    expensesWrap.classList.add('desktop-only');
+  }
+  if (!document.getElementById('expensesCards')) {
+    const cardsDiv = document.createElement('div');
+    cardsDiv.className = 'mobile-cards mobile-only';
+    cardsDiv.id = 'expensesCards';
+    if (expensesWrap) expensesWrap.parentNode.insertBefore(cardsDiv, expensesWrap.nextSibling);
+  }
+}
 
 function loadData() {
   const stored = localStorage.getItem('aparttrack_data');
@@ -118,7 +163,10 @@ function navigateTo(page) {
   document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
   currentPage = page;
   renderPage(page);
-  if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarBackdrop').classList.remove('visible');
+  }
 }
 
 // ----- EVENT LISTENERS ----- //
@@ -131,14 +179,24 @@ function setupEventListeners() {
     });
   });
 
-  // Mobile Menu
+  // Mobile Menu with Backdrop
   const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  function openSidebar() {
+    sidebar.classList.add('open');
+    backdrop.classList.add('visible');
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('visible');
+  }
   document.getElementById('menuBtn').addEventListener('click', (e) => {
     e.stopPropagation();
-    sidebar.classList.toggle('open');
+    if (sidebar.classList.contains('open')) closeSidebar(); else openSidebar();
   });
+  backdrop.addEventListener('click', closeSidebar);
   document.getElementById('mainContent').addEventListener('click', () => {
-    if(window.innerWidth <= 768) sidebar.classList.remove('open');
+    if(window.innerWidth <= 768) closeSidebar();
   });
 
   // Mobile Bottom Nav
@@ -522,6 +580,68 @@ function renderMonthlyTable() {
       <td colspan="3"></td>
     </tr>
   `;
+
+  // Mobile card view
+  renderMonthlyMobileCards(monthName, sumExpected, sumPaid, sumBalance);
+}
+
+function renderMonthlyMobileCards(monthName, sumExpected, sumPaid, sumBalance) {
+  const container = document.getElementById('monthlyCards');
+  if (!container) return;
+  let cards = '';
+  DEFAULT_UNITS.forEach(unit => {
+    const rec = getPaymentRecord(appData.currentYear, monthName, unit);
+    const expected = Number(rec.expected);
+    const paid = Number(rec.paid);
+    const balance = expected - paid;
+    const status = calculateStatus(expected, paid);
+    cards += `
+      <div class="m-card status-${status}">
+        <div class="m-card-header">
+          <div>
+            <div class="m-card-unit">${unit.id}</div>
+            <div class="m-card-tenant">${rec.tenant === '-' ? 'No tenant yet' : rec.tenant}</div>
+          </div>
+          ${getStatusBadgeHtml(status)}
+        </div>
+        <div class="m-card-row">
+          <span class="m-card-row-label">Expected</span>
+          <span class="m-card-row-value">${formatCurrency(expected)}</span>
+        </div>
+        <div class="m-card-row">
+          <span class="m-card-row-label">Paid</span>
+          <span class="m-card-row-value" style="color:var(--success)">${formatCurrency(paid)}</span>
+        </div>
+        <div class="m-card-row">
+          <span class="m-card-row-label">Balance</span>
+          <span class="m-card-row-value ${balance > 0 ? 'text-danger' : ''}">${formatCurrency(balance)}</span>
+        </div>
+        <div class="m-card-footer">
+          <button class="btn btn-primary" onclick="openPaymentModal('${unit.id}', '${monthName}', ${appData.currentYear})">✏️ Edit Payment</button>
+        </div>
+      </div>
+    `;
+  });
+  container.innerHTML = cards;
+
+  // Mobile totals
+  const totalsEl = document.getElementById('monthlyMobileTotals');
+  if (totalsEl) {
+    totalsEl.innerHTML = `
+      <div class="totals-row">
+        <span class="totals-row-label">📊 Total Expected</span>
+        <span class="totals-row-value">${formatCurrency(sumExpected)}</span>
+      </div>
+      <div class="totals-row">
+        <span class="totals-row-label">✅ Total Paid</span>
+        <span class="totals-row-value" style="color:var(--success)">${formatCurrency(sumPaid)}</span>
+      </div>
+      <div class="totals-row">
+        <span class="totals-row-label">⚠️ Outstanding</span>
+        <span class="totals-row-value ${sumBalance > 0 ? 'text-danger' : ''}">${formatCurrency(sumBalance)}</span>
+      </div>
+    `;
+  }
 }
 
 // UNITS PAGE
@@ -561,6 +681,53 @@ function renderUnitsPage() {
 
   if (html === '') html = `<tr><td colspan="9" class="empty-state">No units found matching criteria.</td></tr>`;
   tbody.innerHTML = html;
+
+  // Mobile card view
+  renderUnitsMobileCards(monthName, searchTerm, filterStatus);
+}
+
+function renderUnitsMobileCards(monthName, searchTerm, filterStatus) {
+  const container = document.getElementById('unitsCards');
+  if (!container) return;
+  let cards = '';
+  let found = false;
+  DEFAULT_UNITS.forEach(unit => {
+    const rec = getPaymentRecord(appData.currentYear, monthName, unit);
+    const status = calculateStatus(rec.expected, rec.paid);
+    if (filterStatus !== 'all' && status !== filterStatus) return;
+    if (searchTerm && !unit.id.toLowerCase().includes(searchTerm) && !(rec.tenant && rec.tenant.toLowerCase().includes(searchTerm))) return;
+    found = true;
+    const balance = Number(rec.expected) - Number(rec.paid);
+    cards += `
+      <div class="m-card status-${status}">
+        <div class="m-card-header">
+          <div>
+            <div class="m-card-unit">${unit.id}</div>
+            <div class="m-card-type">${unit.type}</div>
+            <div class="m-card-tenant">${rec.tenant || 'No tenant'}</div>
+          </div>
+          ${getStatusBadgeHtml(status)}
+        </div>
+        <div class="m-card-row">
+          <span class="m-card-row-label">Expected</span>
+          <span class="m-card-row-value">${formatCurrency(rec.expected)}</span>
+        </div>
+        <div class="m-card-row">
+          <span class="m-card-row-label">Paid</span>
+          <span class="m-card-row-value" style="color:var(--success)">${formatCurrency(rec.paid)}</span>
+        </div>
+        <div class="m-card-row">
+          <span class="m-card-row-label">Balance</span>
+          <span class="m-card-row-value ${balance > 0 ? 'text-danger' : ''}">${formatCurrency(balance)}</span>
+        </div>
+        <div class="m-card-footer">
+          <button class="btn btn-primary" onclick="handleUnitClick('${unit.id}', '${monthName}')">✏️ Update Payment</button>
+        </div>
+      </div>
+    `;
+  });
+  if (!found) cards = '<div style="padding:32px;text-align:center;color:var(--text3)">No units match your search.</div>';
+  container.innerHTML = cards;
 }
 
 // EXPENSES PAGE
@@ -625,6 +792,30 @@ function renderExpensesPage() {
   });
   if(!html) html = `<tr><td colspan="5" class="empty-state">No expenses recorded.</td></tr>`;
   tbody.innerHTML = html;
+
+  // Mobile card view
+  renderExpensesMobileCards(filtered);
+}
+
+function renderExpensesMobileCards(filtered) {
+  const container = document.getElementById('expensesCards');
+  if (!container) return;
+  let cards = '';
+  filtered.forEach(e => {
+    cards += `
+      <div class="m-expense-card">
+        <div class="exp-info">
+          <div class="exp-category">${e.category}</div>
+          <div class="exp-desc">${e.desc}</div>
+          <div class="exp-date">${e.date ? e.date.split('-').reverse().join('/') : '-'}</div>
+        </div>
+        <div class="exp-amount">${formatCurrency(e.amount)}</div>
+        <button class="exp-delete" onclick="deleteExpense('${e.id}')" title="Delete">🗑️</button>
+      </div>
+    `;
+  });
+  if (!cards) cards = '<div style="padding:32px;text-align:center;color:var(--text3)">No expenses recorded yet.</div>';
+  container.innerHTML = cards;
 }
 
 // REPORTS PAGE

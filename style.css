@@ -85,6 +85,22 @@ input, select, textarea { font-family: inherit; outline: none; }
   transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
 }
 
+/* Sidebar Backdrop (visible on mobile when sidebar is open) */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 198;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.sidebar-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .sidebar-brand {
   display: flex;
   align-items: center;
@@ -313,7 +329,7 @@ input, select, textarea { font-family: inherit; outline: none; }
 .stat-card.blue .stat-value  { color: var(--primary); }
 .stat-card.yellow .stat-value { color: var(--warning); }
 .stat-card.red .stat-value   { color: var(--danger); }
-.stat-label { font-size: 12px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-label { font-size: 13px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 .stat-sub   { font-size: 12px; color: var(--text3); margin-top: 6px; }
 
 /* ===== CHARTS ===== */
@@ -700,18 +716,18 @@ input, select, textarea { font-family: inherit; outline: none; }
   align-items: center;
   justify-content: center;
   padding: 8px 4px 10px;
-  gap: 3px;
+  gap: 4px;
   color: var(--text3);
   transition: color var(--transition);
   position: relative;
-  min-height: 56px;
+  min-height: 58px;
   min-width: 0;
 }
 .mobile-nav-item::before {
   content: '';
   position: absolute;
   top: 0; left: 20%; right: 20%;
-  height: 2.5px;
+  height: 3px;
   border-radius: 0 0 3px 3px;
   background: transparent;
   transition: background var(--transition);
@@ -719,19 +735,19 @@ input, select, textarea { font-family: inherit; outline: none; }
 .mobile-nav-item:hover { color: var(--text2); }
 .mobile-nav-item.active { color: var(--primary); }
 .mobile-nav-item.active::before { background: var(--primary); }
-.mobile-nav-icon { font-size: 20px; line-height: 1; }
-.mobile-nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
+.mobile-nav-icon { font-size: 22px; line-height: 1; }
+.mobile-nav-label { font-size: 11px; font-weight: 700; letter-spacing: 0.3px; }
 
 /* ===== MOBILE FAB ===== */
 .mobile-fab {
   display: none;
   position: fixed;
-  bottom: 76px; right: 20px;
-  width: 52px; height: 52px;
+  bottom: 76px; right: 16px;
+  width: 56px; height: 56px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--primary), #818cf8);
   color: #fff;
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 300;
   border: none;
   box-shadow: 0 4px 20px rgba(99,102,241,0.5);
@@ -744,6 +760,148 @@ input, select, textarea { font-family: inherit; outline: none; }
 }
 .mobile-fab:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(99,102,241,0.65); }
 .mobile-fab:active { transform: scale(0.92); }
+
+/* ===== MOBILE / DESKTOP VISIBILITY ===== */
+.mobile-only { display: none !important; }
+.desktop-only { display: block; }
+
+/* ===== MOBILE CARD VIEW ===== */
+.mobile-cards {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.m-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: all 0.2s;
+  position: relative;
+}
+.m-card:active { transform: scale(0.98); }
+.m-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.m-card-unit {
+  font-weight: 800;
+  font-size: 16px;
+}
+.m-card-tenant {
+  font-size: 13px;
+  color: var(--text2);
+  margin-bottom: 4px;
+}
+.m-card-type {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 500;
+}
+.m-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 14px;
+}
+.m-card-row + .m-card-row {
+  border-top: 1px solid var(--border);
+}
+.m-card-row-label {
+  color: var(--text2);
+  font-weight: 500;
+}
+.m-card-row-value {
+  font-weight: 700;
+}
+.m-card-footer {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+.m-card-footer .btn {
+  flex: 1;
+  min-height: 44px;
+  font-size: 14px;
+}
+.m-card.status-paid { border-left: 4px solid var(--success); }
+.m-card.status-partial { border-left: 4px solid var(--warning); }
+.m-card.status-unpaid { border-left: 4px solid var(--danger); }
+
+/* Mobile totals card */
+.mobile-totals-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 12px;
+  box-shadow: var(--shadow);
+}
+.mobile-totals-card .totals-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 15px;
+}
+.mobile-totals-card .totals-row + .totals-row { border-top: 1px solid var(--border); }
+.mobile-totals-card .totals-row-label { color: var(--text2); font-weight: 600; }
+.mobile-totals-card .totals-row-value { font-weight: 800; }
+
+/* ===== EXPENSE MOBILE CARD ===== */
+.m-expense-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.m-expense-card .exp-info { flex: 1; min-width: 0; }
+.m-expense-card .exp-category {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.m-expense-card .exp-desc {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 4px 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.m-expense-card .exp-date {
+  font-size: 12px;
+  color: var(--text3);
+}
+.m-expense-card .exp-amount {
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.m-expense-card .exp-delete {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 16px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.m-expense-card .exp-delete:active { transform: scale(0.9); }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
@@ -763,28 +921,29 @@ input, select, textarea { font-family: inherit; outline: none; }
     transform: translateX(0);
     box-shadow: var(--shadow-lg);
   }
+  .sidebar-backdrop { display: block; }
   .topbar { left: 0; }
-  /* Extra bottom padding so content doesn't hide behind the bottom nav */
+  /* Extra bottom padding so content is above bottom nav */
   .main-content { margin-left: 0; padding: 16px 12px 96px; }
   .menu-btn { display: flex; }
-  .topbar-right .search-input { width: 120px; }
+  /* Force hide topbar-right on mobile — FAB and bottom nav replace it */
+  .topbar-right { display: none !important; }
+  .topbar-title { font-size: 16px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .data-table { font-size: 12px; }
-  .data-table td, .data-table th { padding: 10px 8px; }
-  .table-wrap { -webkit-overflow-scrolling: touch; border-radius: var(--radius-sm); }
   /* Show mobile navigation elements */
   .mobile-nav { display: flex; }
   .mobile-fab { display: flex; }
-  /* Slightly smaller page title on mobile */
+  /* Page title */
   .page-header h1 { font-size: 22px; }
+  /* Toggle desktop/mobile views */
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex !important; }
+  /* Charts */
   .charts-row { gap: 16px; }
 }
 
 @media (max-width: 480px) {
   .stats-grid { grid-template-columns: 1fr; }
-  .topbar-right .btn-primary { display: none; }
-  /* Hide topbar search — unit search is on the Units page */
-  .topbar-right .search-input { display: none; }
   .topbar { padding: 0 12px; gap: 8px; }
   /* Bottom-sheet modals */
   .modal-overlay { padding: 0; align-items: flex-end; }
@@ -792,30 +951,35 @@ input, select, textarea { font-family: inherit; outline: none; }
   .modal-header { flex-shrink: 0; padding: 16px 20px; }
   .modal-body { padding: 16px 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1 1 auto; min-height: 0; }
   .modal-footer { flex-shrink: 0; flex-direction: column; gap: 8px; padding: 12px 20px 20px; }
-  .modal-footer .btn { width: 100%; margin: 0; min-height: 48px; }
+  .modal-footer .btn { width: 100%; margin: 0; min-height: 48px; font-size: 15px; }
   .chart-wrap { padding: 10px; }
   /* Tighter card headers */
   .card-header { padding: 12px 14px; flex-wrap: wrap; gap: 8px; }
-  /* Hide Date Paid column on tiny screens to save horizontal space */
-  #monthlyTable th:nth-child(7), #monthlyTable td:nth-child(7),
-  #unitsTable th:nth-child(8), #unitsTable td:nth-child(8) { display: none; }
   /* Unit status cards in 2 columns */
   .unit-status-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 12px; }
-  .unit-card-name { font-size: 13px; }
-  .unit-card-tenant { font-size: 10px; }
+  .unit-card { padding: 16px; }
+  .unit-card-name { font-size: 14px; }
+  .unit-card-tenant { font-size: 12px; }
+  .unit-card-amount { font-size: 14px; }
   /* Compact page header */
   .page-header { margin-bottom: 16px; }
-  .page-sub { font-size: 12px; }
+  .page-sub { font-size: 13px; }
   /* More compact month tabs */
-  .month-tab { padding: 8px 14px; font-size: 13px; min-height: 40px; }
+  .month-tab { padding: 10px 16px; font-size: 14px; min-height: 44px; }
   /* FAB sits just above mobile nav */
   .mobile-fab { bottom: 72px; }
   /* Filter bar stacks vertically */
-  .filter-bar { flex-direction: column; align-items: stretch; }
-  .filter-bar .search-input, .filter-bar .select-sm { width: 100%; }
+  .filter-bar { flex-direction: column; align-items: stretch; gap: 10px; }
+  .filter-bar .search-input, .filter-bar .select-sm { width: 100%; min-height: 44px; font-size: 15px; }
   /* Expense controls stack */
-  .expense-controls { flex-wrap: wrap; }
-  .expense-controls .select-sm { flex: 1; }
+  .expense-controls { flex-wrap: wrap; gap: 10px; }
+  .expense-controls .select-sm { flex: 1; min-height: 44px; font-size: 15px; }
+  .expense-controls .btn { min-height: 44px; font-size: 14px; }
+  /* Stat cards on small screens */
+  .stat-label { font-size: 13px; }
+  .stat-value { font-size: 24px; }
+  .stat-sub { font-size: 13px; }
+  .stat-card { padding: 16px; }
 
   @keyframes modalUp {
     from { opacity: 0; transform: translateY(100%); }
