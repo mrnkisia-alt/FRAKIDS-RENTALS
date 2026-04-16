@@ -52,7 +52,6 @@ function loadData() {
 
 function saveData() {
   localStorage.setItem('aparttrack_data', JSON.stringify(appData));
-  showToast('Data saved locally');
 }
 
 // ----- UI SETUP ----- //
@@ -61,7 +60,6 @@ function setupUI() {
   const isDark = localStorage.getItem('aparttrack_theme') === 'dark' || (!localStorage.getItem('aparttrack_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
   if (isDark) {
     document.documentElement.setAttribute('data-theme', 'dark');
-    document.getElementById('themeIcon').innerText = '☀️';
     document.getElementById('themeToggle').innerHTML = '<span id="themeIcon">☀️</span> Light Mode';
   } else {
     document.documentElement.setAttribute('data-theme', 'light');
@@ -114,17 +112,22 @@ function populateSelect(id, array, selectedValue, isIndex = false) {
   });
 }
 
+// ----- NAVIGATION HELPER ----- //
+function navigateTo(page) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  currentPage = page;
+  renderPage(page);
+  if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+}
+
 // ----- EVENT LISTENERS ----- //
 function setupEventListeners() {
   // Navigation
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      item.classList.add('active');
-      currentPage = item.dataset.page;
-      renderPage(currentPage);
-      if(window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+      navigateTo(item.dataset.page);
     });
   });
 
@@ -136,6 +139,20 @@ function setupEventListeners() {
   });
   document.getElementById('mainContent').addEventListener('click', () => {
     if(window.innerWidth <= 768) sidebar.classList.remove('open');
+  });
+
+  // Mobile Bottom Nav
+  document.querySelectorAll('.mobile-nav-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateTo(item.dataset.page);
+    });
+  });
+
+  // Mobile FAB — quick-add payment for current month
+  document.getElementById('mobileFAB').addEventListener('click', () => {
+    navigateTo('monthly');
+    setTimeout(() => openPaymentModal(DEFAULT_UNITS[0].id, MONTHS[currentMonthIndex], appData.currentYear), 60);
   });
 
   // Theme Toggle
@@ -366,12 +383,12 @@ function renderDashboardCards() {
 }
 
 function handleUnitClick(unitId, monthName) {
-  // Jump to monthly page and open edit modal
   currentMonthIndex = MONTHS.indexOf(monthName);
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelector('.nav-item[data-page="monthly"]').classList.add('active');
-  currentPage = 'monthly';
-  renderPage('monthly');
+  // Sync month tab highlight
+  document.querySelectorAll('.month-tab').forEach((t, i) => {
+    t.classList.toggle('active', i === currentMonthIndex);
+  });
+  navigateTo('monthly');
   openPaymentModal(unitId, monthName, appData.currentYear);
 }
 
@@ -810,11 +827,11 @@ function exportToCSV(type) {
   rows.forEach(row => {
     let rowData = [];
     row.querySelectorAll('th, td').forEach(cell => {
-      // Clean string
+      if (cell.querySelector('button, .btn, .btn-icon')) return; // skip action columns
       let txt = cell.innerText.replace(/"/g, '""').replace(/KES/g, '').trim();
       rowData.push(`"${txt}"`);
     });
-    csvContent += rowData.join(',') + "\r\n";
+    if (rowData.length) csvContent += rowData.join(',') + "\r\n";
   });
 
   const encodedUri = encodeURI(csvContent);
@@ -849,7 +866,6 @@ function generatePDF(tableId, title) {
     doc.save(`${title}.pdf`);
     showToast('PDF Downloaded successfully', 'success');
   } else {
-    // Fallback if jsPDF is not loaded
-    window.print();
+    showToast('PDF library not loaded. Please use CSV export instead.', 'error');
   }
 }
